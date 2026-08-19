@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import sys
+from pathlib import Path
 
+# Add project root directory to Python path
+ROOT_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT_DIR))
 from app.config import settings
 from app.auth import get_password_hash, verify_password, create_access_token
 from app.models import get_db, User
