@@ -2,8 +2,7 @@ import secrets
 from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, Request, Response, Depends, Form, HTTPException, status
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -18,8 +17,8 @@ app = FastAPI(title=settings.APP_NAME, docs_url=None, redoc_url=None)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-BASE_DIR = Path(__file__).resolve().parent
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+# Path to HTML files directory
+TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
 # --- SECURITY MIDDLEWARE ---
@@ -33,25 +32,31 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 
-# --- PAGES ---
+# --- STATIC HTML PAGE HANDLERS (No Template Engine Needed) ---
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_home(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+@app.get("/", response_class=FileResponse)
+async def serve_home():
+    return FileResponse(TEMPLATES_DIR / "index.html")
 
 
-@app.get("/login", response_class=HTMLResponse)
-async def serve_login(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={"csrf_token": secrets.token_urlsafe(32)}
+@app.get("/login", response_class=FileResponse)
+async def serve_login(response: Response):
+    # Set CSRF cookie directly on the response
+    csrf_token = secrets.token_urlsafe(32)
+    res = FileResponse(TEMPLATES_DIR / "index.html")
+    res.set_cookie(
+        key=settings.CSRF_COOKIE_NAME,
+        value=csrf_token,
+        httponly=False,
+        secure=(settings.ENVIRONMENT == "production"),
+        samesite="lax"
     )
+    return res
 
 
-@app.get("/register", response_class=HTMLResponse)
-async def serve_register(request: Request):
-    return templates.TemplateResponse(request=request, name="register.html")
+@app.get("/register", response_class=FileResponse)
+async def serve_register():
+    return FileResponse(TEMPLATES_DIR / "register.html")
 
 
 # --- AUTH ENDPOINTS ---
@@ -73,7 +78,6 @@ async def register_user(
             detail="Password must be at least 8 characters long."
         )
 
-    # Check if user already exists
     existing_user = db.query(User).filter(User.email == cleaned_email).first()
     if existing_user:
         raise HTTPException(
@@ -81,7 +85,6 @@ async def register_user(
             detail="An account with this email already exists."
         )
 
-    # Create user with Argon2id hash
     new_user = User(
         email=cleaned_email,
         password_hash=get_password_hash(password),
