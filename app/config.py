@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     APP_NAME: str = "SyncraCloud Auth Service"
-    ENVIRONMENT: str = "development"  # Switch to 'production' on live deployment
+    ENVIRONMENT = "production"
 
     # MUST MATCH AUTH_SECRET_KEY in the guarded website's auth_guard.py
     SECRET_KEY: str = "CHANGE_THIS_TO_A_SECURE_64_CHAR_HEX_KEY"
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # In production, set to ".syncracloud.co.za" to share across all subdomains
     # In local testing on localhost, leave as None
-    COOKIE_DOMAIN: str | None = None
+    COOKIE_DOMAIN = ".syncracloud.co.za"
 
     # Default destination after login if no return_to is specified
     DEFAULT_REDIRECT_URL: str = "http://localhost:8020/"
