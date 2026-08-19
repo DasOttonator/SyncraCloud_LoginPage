@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | SyncraCloud</title>
+    <!-- SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'><radialGradient id='bg-glow' cx='50%' cy='50%' r='60%'><stop offset='0%' stop-color='%230F172A'/><stop offset='100%' stop-color='%23080C14'/></radialGradient><linearGradient id='cyan-gradient' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2300F0FF'/><stop offset='100%' stop-color='%230088FF'/></linearGradient><linearGradient id='steel-gradient' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2394A3B8'/><stop offset='100%' stop-color='%23475569'/></linearGradient><rect width='100%' height='100%' rx='32' fill='url(%23bg-glow)'/><g transform='translate(10, 0)'><path fill='url(%23steel-gradient)' d='M 310, 160 C 220, 110 160, 170 160, 250 C 160, 330 220, 390 310, 340 L 330, 380 C 200, 440 110, 350 110, 250 C 110, 150 200, 60 330, 120 Z'/><path fill='url(%23cyan-gradient)' d='M 340, 150 C 340, 120 300, 110 270, 130 C 230, 155 220, 195 270, 220 L 300, 235 C 350, 260 360, 320 310, 355 C 260, 390 190, 370 180, 325 L 225, 315 C 230, 335 270, 345 295, 330 C 320, 315 315, 285 275, 265 L 245, 250 C 195, 225 190, 160 245, 125 C 295, 95 380, 110 385, 160 Z'/><circle fill='%2300F0FF' cx='340' cy='380' r='8'/></g></svg>">
+    <style>
+        :root {
+            --bg-slate: #080C14;
+            --surface-slate: #0F172A;
+            --surface-glass: rgba(15, 23, 42, 0.75);
+            --surface-card: rgba(30, 41, 59, 0.5);
+            --border-steel: rgba(71, 85, 105, 0.5);
+            --border-glow: rgba(0, 240, 255, 0.4);
+            --accent-cyan: #00F0FF;
+            --accent-cyan-hover: #00C8FF;
+            --accent-cyan-subtle: rgba(0, 240, 255, 0.12);
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-slate);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #neuron-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #cursor-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+        }
+
+        .top-bar {
+            position: relative;
+            z-index: 2;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover .logo-icon {
+            transform: rotate(5deg) scale(1.05);
+        }
+
+        .logo span {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-cyan);
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 460px;
+            margin: 1.5rem auto 3rem;
+            padding: 0 1.25rem;
+        }
+
+        .login-card {
+            background: var(--surface-glass);
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.15), 0 20px 40px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            backdrop-filter: blur(16px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+        }
+
+        .badge-secure {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.8rem;
+            background-color: var(--accent-cyan-subtle);
+            color: var(--accent-cyan);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .login-card h1 {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .login-card p.subtext {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.35rem;
+        }
+
+        .form-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .form-group label a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: opacity 0.2s;
+        }
+
+        .form-group label a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background-color: rgba(8, 12, 20, 0.8);
+            border: 1px solid var(--border-steel);
+            border-radius: 10px;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+            background-color: rgba(15, 23, 42, 0.9);
+        }
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+        }
+
+        .form-options input[type="checkbox"] {
+            accent-color: var(--accent-cyan);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .form-options label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-cyan), #0099FF);
+            color: #040810;
+            padding: 0.85rem 1.75rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 0 18px rgba(0, 240, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 28px rgba(0, 240, 255, 0.55);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.75rem 0;
+            color: var(--border-steel);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px dashed var(--border-steel);
+        }
+
+        .divider span {
+            padding: 0 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .sso-btn {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-steel);
+            border-radius: 10px;
+            padding: 0.75rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            transition: all 0.2s;
+        }
+
+        .sso-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: var(--accent-cyan-subtle);
+        }
+
+        .card-footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .card-footer a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .card-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .status-msg {
+            display: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        footer {
+            position: relative;
+            z-index: 2;
+            padding: 1.5rem 5%;
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            background-color: rgba(8, 12, 20, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="neuron-canvas"></canvas>
+    <div id="cursor-glow"></div>
+
+    <header class="top-bar">
+        <a href="/" class="logo">
+            <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+                <defs>
+                    <radialGradient id="nav-bg-glow" cx="50%" cy="50%" r="60%">
+                        <stop offset="0%" stop-color="#0F172A"/>
+                        <stop offset="100%" stop-color="#080C14"/>
+                    </radialGradient>
+                    <linearGradient id="nav-cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00F0FF"/>
+                        <stop offset="100%" stop-color="#0088FF"/>
+                    </linearGradient>
+                    <linearGradient id="nav-steel-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#94A3B8"/>
+                        <stop offset="100%" stop-color="#475569"/>
+                    </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" rx="64" fill="url(#nav-bg-glow)"/>
+                <g transform="translate(10, 0)">
+                    <path fill="url(#nav-steel-grad)" d="M 310, 160 C 220, 110 160, 170 160, 250 C 160, 330 220, 390 310, 340 L 330, 380 C 200, 440 110, 350 110, 250 C 110, 150 200, 60 330, 120 Z"/>
+                    <path fill="url(#nav-cyan-grad)" d="M 340, 150 C 340, 120 300, 110 270, 130 C 230, 155 220, 195 270, 220 L 300, 235 C 350, 260 360, 320 310, 355 C 260, 390 190, 370 180, 325 L 225, 315 C 230, 335 270, 345 295, 330 C 320, 315 315, 285 275, 265 L 245, 250 C 195, 225 190, 160 245, 125 C 295, 95 380, 110 385, 160 Z"/>
+                    <circle fill="#00F0FF" cx="340" cy="380" r="12"/>
+                </g>
+            </svg>
+            Syncra<span>Cloud</span>
+        </a>
+        <a href="/" class="back-link">← Back to website</a>
+    </header>
+
+    <main class="login-wrapper">
+        <div class="login-card">
+            <span class="badge-secure">🛡️ Encrypted Access</span>
+            <h1>Client Portal</h1>
+            <p class="subtext">Sign in to manage your automated workflows, AI agents, and live analytics dashboards.</p>
+
+            <div id="loginStatus" class="status-msg"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Work Email</label>
+                    <input type="email" id="email" name="email" required placeholder="name@company.co.za" autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        Password
+                        <a href="javascript:void(0)">Forgot password?</a>
+                    </label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••••••" autocomplete="current-password">
+                </div>
+
+                <div class="form-options">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Keep me authenticated for 30 days</label>
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn">
+                    <span>Authenticate</span> →
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>Enterprise Access</span>
+            </div>
+
+            <button type="button" class="sso-btn" onclick="alert('Redirecting to Enterprise SSO...')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Sign in with Single Sign-On (SSO)
+            </button>
+
+            <div class="card-footer">
+                Need turnkey workspace access? <a href="/#contact">Contact integration team</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; SyncraCloud (Pty) Ltd. Bank-grade 256-bit encryption • POPIA & GDPR compliant.</p>
+    </footer>
+
+    <script>
+        // --- NEURAL NETWORK CANVAS ANIMATION ---
+        const canvas = document.getElementById('neuron-canvas');
+        const ctx = canvas.getContext('2d');
+        let neurons = [];
+        let pulses = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Neuron {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.baseRadius = Math.random() * 2 + 1.5;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                this.pulsePhase += 0.03;
+            }
+
+            draw() {
+                const currentRadius = this.baseRadius + Math.sin(this.pulsePhase) * 0.7;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.8)';
+                ctx.shadowColor = '#00F0FF';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Pulse {
+            constructor(startNeuron, endNeuron) {
+                this.startX = startNeuron.x;
+                this.startY = startNeuron.y;
+                this.endX = endNeuron.x;
+                this.endY = endNeuron.y;
+                this.progress = 0;
+                this.speed = Math.random() * 0.02 + 0.01;
+            }
+
+            update() {
+                this.progress += this.speed;
+            }
+
+            draw() {
+                const currentX = this.startX + (this.endX - this.startX) * this.progress;
+                const currentY = this.startY + (this.endY - this.startY) * this.progress;
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.shadowColor = '#00F0FF';
+                ctx.shadowBlur = 8;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        const neuronCount = Math.floor((window.innerWidth * window.innerHeight) / 22000);
+        for (let i = 0; i < Math.max(neuronCount, 35); i++) {
+            neurons.push(new Neuron());
+        }
+
+        function animateNeuralNetwork() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < neurons.length; i++) {
+                neurons[i].update();
+                neurons[i].draw();
+
+                for (let j = i + 1; j < neurons.length; j++) {
+                    const dx = neurons[i].x - neurons[j].x;
+                    const dy = neurons[i].y - neurons[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxConnectDistance = 160;
+
+                    if (distance < maxConnectDistance) {
+                        const alpha = (1 - distance / maxConnectDistance) * 0.25;
+                        ctx.beginPath();
+                        ctx.moveTo(neurons[i].x, neurons[i].y);
+                        ctx.lineTo(neurons[j].x, neurons[j].y);
+                        ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+
+                        if (Math.random() < 0.001) {
+                            pulses.push(new Pulse(neurons[i], neurons[j]));
+                        }
+                    }
+                }
+            }
+
+            for (let k = pulses.length - 1; k >= 0; k--) {
+                pulses[k].update();
+                pulses[k].draw();
+                if (pulses[k].progress >= 1) pulses.splice(k, 1);
+            }
+
+            requestAnimationFrame(animateNeuralNetwork);
+        }
+        animateNeuralNetwork();
+
+        // --- CURSOR GLOW ---
+        const cursorGlow = document.getElementById('cursor-glow');
+        window.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // --- FORM SUBMIT HANDLER ---
+        async function handleLogin(event) {
+            event.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const statusBox = document.getElementById('loginStatus');
+
+            btn.innerHTML = '<span>Verifying credentials...</span>';
+            btn.disabled = true;
+            statusBox.style.display = 'none';
+
+            // Simulated authentication workflow
+            setTimeout(() => {
+                statusBox.style.display = 'block';
+                statusBox.style.backgroundColor = 'rgba(0, 240, 255, 0.15)';
+                statusBox.style.border = '1px solid var(--accent-cyan)';
+                statusBox.style.color = 'var(--accent-cyan)';
+                statusBox.innerText = 'Authentication successful. Redirecting to workspace...';
+
+                setTimeout(() => {
+                    btn.innerHTML = '<span>Authenticate</span> →';
+                    btn.disabled = false;
+                }, 1500);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

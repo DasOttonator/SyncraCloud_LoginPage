@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | SyncraCloud</title>
+    <style>
+        :root {
+            --bg-slate: #080C14;
+            --surface-glass: rgba(15, 23, 42, 0.75);
+            --border-steel: rgba(71, 85, 105, 0.5);
+            --border-glow: rgba(0, 240, 255, 0.4);
+            --accent-cyan: #00F0FF;
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-slate);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .top-bar {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            color: var(--accent-cyan);
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 480px;
+            margin: 1.5rem auto 3rem;
+            padding: 0 1.25rem;
+        }
+
+        .card {
+            background: var(--surface-glass);
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.15);
+            border-radius: 20px;
+            padding: 2.75rem 2.25rem;
+            backdrop-filter: blur(16px);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtext {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background-color: rgba(8, 12, 20, 0.8);
+            border: 1px solid var(--border-steel);
+            border-radius: 10px;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-cyan), #0099FF);
+            color: #040810;
+            padding: 0.85rem;
+            border-radius: 10px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.5rem;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-box {
+            display: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .footer-note {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .footer-note a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo">Syncra<span>Cloud</span></a>
+        <a href="/login" class="back-link">Sign In →</a>
+    </header>
+
+    <main class="wrapper">
+        <div class="card">
+            <h1>Create Account</h1>
+            <p class="subtext">Register a new client or administrator workspace account.</p>
+
+            <div id="statusBox" class="status-box"></div>
+
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="email">Work Email</label>
+                    <input type="email" id="email" required placeholder="user@company.co.za">
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Account Role</label>
+                    <select id="role">
+                        <option value="client">Client User</option>
+                        <option value="manager">Operations Manager</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password (Min. 8 characters)</label>
+                    <input type="password" id="password" minlength="8" required placeholder="••••••••••••">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" minlength="8" required placeholder="••••••••••••">
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn">Provision Account</button>
+            </form>
+
+            <div class="footer-note">
+                Already have an account? <a href="/login">Sign in</a>
+            </div>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+        &copy; SyncraCloud (Pty) Ltd. Secure credential provisioning.
+    </footer>
+
+    <script>
+        async function handleRegister(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const statusBox = document.getElementById('statusBox');
+            const email = document.getElementById('email').value.trim();
+            const role = document.getElementById('role').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                statusBox.style.display = 'block';
+                statusBox.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                statusBox.style.border = '1px solid rgba(239, 68, 68, 0.5)';
+                statusBox.style.color = '#FCA5A5';
+                statusBox.innerText = 'Passwords do not match.';
+                return;
+            }
+
+            btn.innerText = 'Creating account...';
+            btn.disabled = true;
+            statusBox.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('role', role);
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusBox.style.display = 'block';
+                    statusBox.style.backgroundColor = 'rgba(0, 240, 255, 0.15)';
+                    statusBox.style.border = '1px solid var(--accent-cyan)';
+                    statusBox.style.color = 'var(--accent-cyan)';
+                    statusBox.innerText = 'Account created successfully! Redirecting to login...';
+
+                    document.getElementById('registerForm').reset();
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 1500);
+                } else {
+                    throw new Error(data.detail || 'Registration failed.');
+                }
+            } catch (err) {
+                statusBox.style.display = 'block';
+                statusBox.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                statusBox.style.border = '1px solid rgba(239, 68, 68, 0.5)';
+                statusBox.style.color = '#FCA5A5';
+                statusBox.innerText = err.message;
+            } finally {
+                btn.innerText = 'Provision Account';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
